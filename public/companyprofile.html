@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Profile
+        
+    </title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #f0f2f5;
+            --sidebar: #1a2332;
+            --sidebar-hover: #243347;
+            --accent: #3b82f6;
+            --accent-dark: #2563eb;
+            --accent-light: #eff6ff;
+            --green: #22c55e;
+            --green-dark: #16a34a;
+            --red: #ef4444;
+            --white: #ffffff;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --light: #f8fafc;
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar { background: var(--sidebar); width: 240px; position: fixed; top: 0; left: 0; height: 100%; padding: 28px 16px; display: flex; flex-direction: column; gap: 4px; z-index: 100; }
+        .sidebar h2 { color: #fff; font-size: 17px; font-weight: 600; text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #2d3f55; }
+        .sidebar a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; padding: 10px 14px; border-radius: 8px; display: block; transition: all .2s; }
+        .sidebar a:hover { background: var(--sidebar-hover); color: #fff; }
+        .sidebar a.active { background: var(--sidebar-hover); color: var(--accent); }
+        .sidebar a#logout { color: #f87171; margin-top: 8px; }
+        .sidebar a#logout:hover { background: #2d1f1f; color: #fca5a5; }
+        .sidebar footer { color: #475569; font-size: 11px; text-align: center; margin-top: auto; padding-top: 20px; }
+
+        /* ── Main ── */
+        .main-content { margin-left: 240px; padding: 36px 40px; width: calc(100% - 240px); }
+
+        /* ── Profile Hero ── */
+        .profile-hero {
+            background: linear-gradient(135deg, #0f2144 0%, #1e40af 60%, #2563eb 100%);
+            border-radius: 16px;
+            padding: 36px 40px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .profile-hero::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,.04);
+            border-radius: 50%;
+        }
+        .profile-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; right: 120px;
+            width: 280px; height: 280px;
+            background: rgba(255,255,255,.03);
+            border-radius: 50%;
+        }
+
+        /* Logo */
+        .logo-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .logo-circle {
+            width: 96px; height: 96px;
+            border-radius: 20px;
+            background: rgba(255,255,255,.15);
+            border: 2px solid rgba(255,255,255,.25);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .2s;
+        }
+        .logo-circle:hover { border-color: rgba(255,255,255,.6); }
+        .logo-circle img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .logo-placeholder { font-size: 36px; line-height: 1; }
+        .logo-edit-hint {
+            position: absolute; bottom: -6px; right: -6px;
+            background: var(--accent); color: #fff;
+            font-size: 11px; font-weight: 600;
+            padding: 3px 7px; border-radius: 6px;
+            cursor: pointer;
+        }
+        #logo-input { display: none; }
+
+        .hero-info { flex: 1; }
+        .hero-info h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+        .hero-info .industry-tag {
+            display: inline-block;
+            background: rgba(255,255,255,.15);
+            color: rgba(255,255,255,.9);
+            font-size: 12.5px; font-weight: 500;
+            padding: 4px 12px; border-radius: 20px;
+            margin-bottom: 10px;
+        }
+        .hero-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+        .hero-meta span { font-size: 13px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 5px; }
+
+        .hero-actions { display: flex; gap: 10px; margin-left: auto; }
+        .btn-edit-hero {
+            background: rgba(255,255,255,.15);
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,.3);
+            padding: 9px 20px;
+            border-radius: 9px;
+            font-size: 13.5px; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+            transition: all .2s;
+            backdrop-filter: blur(4px);
+        }
+        .btn-edit-hero:hover { background: rgba(255,255,255,.25); }
+
+        /* ── Grid layout ── */
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .profile-grid .full { grid-column: 1 / -1; }
+
+        /* ── Cards ── */
+        .p-card {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.05);
+        }
+        .p-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .p-card-header h3 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .p-card-header h3 span { font-size: 16px; }
+        .p-card-body { padding: 20px; }
+
+        /* Field rows (view mode) */
+        .field-row { display: flex; flex-direction: column; gap: 3px; margin-bottom: 16px; }
+        .field-row:last-child { margin-bottom: 0; }
+        .field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+        .field-value { font-size: 14px; font-weight: 500; color: var(--text); }
+        .field-value.empty { color: var(--muted); font-style: italic; font-weight: 400; }
+        .field-value a { color: var(--accent); text-decoration: none; }
+        .field-value a:hover { text-decoration: underline; }
+
+        /* Two-col field grid */
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+
+        /* Edit form fields */
+        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-group label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            font-family: inherit; font-size: 14px;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px; color: var(--text);
+            background: var(--light);
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+            background: #fff;
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+
+        /* Edit/Save buttons per card */
+        .card-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
+        .btn-edit   { background: var(--accent-light); color: var(--accent); border: none; padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s; }
+        .btn-edit:hover { background: #dbeafe; }
+        .btn-save   { background: var(--accent); color: #fff; border: none; padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s; }
+        .btn-save:hover { background: var(--accent-dark); }
+        .btn-cancel-edit { background: var(--light); color: var(--muted); border: 1.5px solid var(--border); padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-cancel-edit:hover { background: var(--border); }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 28px; right: 28px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid var(--green); }
+        .toast.error   { border-left: 4px solid var(--red); }
+
+        /* Spinner */
+        .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 4px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Social links */
+        .social-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: 7px; text-decoration: none; transition: background .15s; }
+        .social-link.linkedin { background: #e8f0fe; color: #1d4ed8; }
+        .social-link.linkedin:hover { background: #dbeafe; }
+        .social-link.twitter  { background: #e0f2fe; color: #0369a1; }
+        .social-link.twitter:hover  { background: #bae6fd; }
+
+        /* Completion bar */
+        .completion-bar-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 0; }
+        .completion-bar-bg { flex: 1; height: 7px; background: var(--border); border-radius: 99px; overflow: hidden; }
+        .completion-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 99px; transition: width .6s ease; }
+        .completion-pct { font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Company Dashboard</h2>
+    <a href="company-dashboard.html">🏠 Dashboard</a>
+    <a href="compdash.html">👥 Manage Students</a>
+    <a href="companyprofile.html" class="active">👤 Profile</a>
+    <a href="company-login.html" id="logout">🚪 Logout</a>
+    <footer>
+        
+    </footer>
+</div>
+
+<div class="main-content">
+
+    <!-- Hero -->
+    <div class="profile-hero" id="profile-hero">
+        <div class="logo-wrapper">
+            <div class="logo-circle" onclick="document.getElementById('logo-input').click()" title="Click to upload logo">
+                <img id="logo-img" src="" alt="Logo">
+                <span class="logo-placeholder" id="logo-placeholder">🏢</span>
+            </div>
+            <span class="logo-edit-hint" onclick="document.getElementById('logo-input').click()">📷 Edit</span>
+            <input type="file" id="logo-input" accept="image/*" onchange="uploadLogo(event)">
+        </div>
+        <div class="hero-info">
+            <h1 id="hero-name">Your Company Name</h1>
+            <div class="industry-tag" id="hero-industry">Industry not set</div>
+            <div class="hero-meta">
+                <span id="hero-size">👥 Size not set</span>
+                <span id="hero-city">📍 Location not set</span>
+                <span id="hero-founded">📅 Founded: —</span>
+                <span id="hero-website-span" style="display:none">
+                    🌐 <a id="hero-website" href="#" target="_blank" style="color:rgba(255,255,255,.85)">Website</a>
+                </span>
+            </div>
+        </div>
+        <!-- Profile completion -->
+        <div style="text-align:right;min-width:160px">
+            <div style="color:rgba(255,255,255,.7);font-size:12px;margin-bottom:8px;font-weight:500">PROFILE COMPLETION</div>
+            <div class="completion-bar-wrap">
+                <div class="completion-bar-bg"><div class="completion-bar-fill" id="comp-bar" style="width:0%"></div></div>
+                <span class="completion-pct" id="comp-pct" style="color:#fff">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="profile-grid">
+
+        <!-- Basic Info -->
+        <div class="p-card">
+            <div class="p-card-header">
+                <h3><span>🏢</span> Basic Information</h3>
+            </div>
+            <div class="p-card-body" id="basic-view">
+                <div class="field-grid">
+                    <div class="field-row"><div class="field-label">Company Name</div><div class="field-value" id="v-companyName">—</div></div>
+                    <div class="field-row"><div class="field-label">Industry</div><div class="field-value" id="v-industry">—</div></div>
+                    <div class="field-row"><div class="field-label">Company Size</div><div class="field-value" id="v-companySize">—</div></div>
+                    <div class="field-row"><div class="field-label">Founded Year</div><div class="field-value" id="v-foundedYear">—</div></div>
+                </div>
+                <div class="field-row" style="margin-top:12px"><div class="field-label">Website</div><div class="field-value" id="v-website">—</div></div>
+                <div class="field-row"><div class="field-label">About Company</div><div class="field-value" id="v-description" style="line-height:1.6;font-weight:400">—</div></div>
+            </div>
+            <div class="p-card-body" id="basic-edit" style="display:none">
+                <div class="form-two-col">
+                    <div class="form-group"><label>Company Name</label><input type="text" id="e-companyName" placeholder="e.g. TechCorp Pvt Ltd"></div>
+                    <div class="form-group"><label>Industry</label>
+                        <select id="e-industry">
+                            <option value="">Select Industry</option>
+                            <option>Information Technology</option>
+                            <option>Software Development</option>
+                            <option>Finance & Banking</option>
+                            <option>Healthcare</option>
+                            <option>Education</option>
+                            <option>Manufacturing</option>
+                            <option>Consulting</option>
+                            <option>E-Commerce</option>
+                            <option>Media & Entertainment</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Company Size</label>
+                        <select id="e-companySize">
+                            <option value="">Select Size</option>
+                            <option>1–10 employees</option>
+                            <option>11–50 employees</option>
+                            <option>51–200 employees</option>
+                            <option>201–500 employees</option>
+                            <option>501–1000 employees</option>
+                            <option>1000+ employees</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Founded Year</label><input type="number" id="e-foundedYear" placeholder="e.g. 2010" min="1800" max="2025"></div>
+                </div>
+                <div class="form-group"><label>Website</label><input type="url" id="e-website" placeholder="https://yourcompany.com"></div>
+                <div class="form-group"><label>About Company</label><textarea id="e-description" placeholder="Describe what your company does, mission, culture…"></textarea></div>
+            </div>
+            <div class="card-actions" id="basic-actions">
+                <button class="btn-edit" onclick="toggleEdit('basic')">✏️ Edit</button>
+            </div>
+            <div class="card-actions" id="basic-save-actions" style="display:none">
+                <button class="btn-cancel-edit" onclick="cancelEdit('basic')">Cancel</button>
+                <button class="btn-save" onclick="saveSection('basic')">💾 Save</button>
+            </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="p-card">
+            <div class="p-card-header">
+                <h3><span>📞</span> Contact Information</h3>
+            </div>
+            <div class="p-card-body" id="contact-view">
+                <div class="field-row"><div class="field-label">Contact Email</div><div class="field-value" id="v-contactEmail">—</div></div>
+                <div class="field-row"><div class="field-label">Contact Phone</div><div class="field-value" id="v-contactPhone">—</div></div>
+                <div class="field-row"><div class="field-label">Address</div><div class="field-value" id="v-address">—</div></div>
+                <div class="field-grid">
+                    <div class="field-row"><div class="field-label">City</div><div class="field-value" id="v-city">—</div></div>
+                    <div class="field-row"><div class="field-label">State</div><div class="field-value" id="v-state">—</div></div>
+                    <div class="field-row"><div class="field-label">Country</div><div class="field-value" id="v-country">—</div></div>
+                    <div class="field-row"><div class="field-label">Pincode</div><div class="field-value" id="v-pincode">—</div></div>
+                </div>
+            </div>
+            <div class="p-card-body" id="contact-edit" style="display:none">
+                <div class="form-two-col">
+                    <div class="form-group"><label>Contact Email</label><input type="email" id="e-contactEmail" placeholder="contact@company.com"></div>
+                    <div class="form-group"><label>Contact Phone</label><input type="tel" id="e-contactPhone" placeholder="+91 XXXXX XXXXX"></div>
+                </div>
+                <div class="form-group"><label>Address</label><input type="text" id="e-address" placeholder="Street address"></div>
+                <div class="form-two-col">
+                    <div class="form-group"><label>City</label><input type="text" id="e-city" placeholder="Mumbai"></div>
+                    <div class="form-group"><label>State</label><input type="text" id="e-state" placeholder="Maharashtra"></div>
+                    <div class="form-group"><label>Country</label><input type="text" id="e-country" placeholder="India"></div>
+                    <div class="form-group"><label>Pincode</label><input type="text" id="e-pincode" placeholder="400001"></div>
+                </div>
+            </div>
+            <div class="card-actions" id="contact-actions">
+                <button class="btn-edit" onclick="toggleEdit('contact')">✏️ Edit</button>
+            </div>
+            <div class="card-actions" id="contact-save-actions" style="display:none">
+                <button class="btn-cancel-edit" onclick="cancelEdit('contact')">Cancel</button>
+                <button class="btn-save" onclick="saveSection('contact')">💾 Save</button>
+            </div>
+        </div>
+
+        <!-- Social Links (full width) -->
+        <div class="p-card full">
+            <div class="p-card-header">
+                <h3><span>🔗</span> Social & Online Presence</h3>
+            </div>
+            <div class="p-card-body" id="social-view">
+                <div style="display:flex;gap:12px;flex-wrap:wrap">
+                    <a class="social-link linkedin" id="v-linkedin" href="#" target="_blank" style="display:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#1d4ed8"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                        LinkedIn
+                    </a>
+                    <a class="social-link twitter" id="v-twitter" href="#" target="_blank" style="display:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#0369a1"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+                        Twitter / X
+                    </a>
+                    <span id="v-no-social" style="font-size:14px;color:var(--muted);font-style:italic">No social links added yet.</span>
+                </div>
+            </div>
+            <div class="p-card-body" id="social-edit" style="display:none">
+                <div class="form-two-col">
+                    <div class="form-group"><label>LinkedIn URL</label><input type="url" id="e-linkedin" placeholder="https://linkedin.com/company/yourcompany"></div>
+                    <div class="form-group"><label>Twitter / X URL</label><input type="url" id="e-twitter" placeholder="https://twitter.com/yourcompany"></div>
+                </div>
+            </div>
+            <div class="card-actions" id="social-actions">
+                <button class="btn-edit" onclick="toggleEdit('social')">✏️ Edit</button>
+            </div>
+            <div class="card-actions" id="social-save-actions" style="display:none">
+                <button class="btn-cancel-edit" onclick="cancelEdit('social')">Cancel</button>
+                <button class="btn-save" onclick="saveSection('social')">💾 Save</button>
+            </div>
+        </div>
+
+    </div><!-- /grid -->
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // ── Config ──
+    // Get userId from localStorage (set during login)
+    const userId   = localStorage.getItem('userId') || '{{REPLACE_WITH_USER_ID}}';
+    const API_BASE = `http://localhost:5000/api/company-profile/${userId}`;
+    const LOGO_API = `http://localhost:5000/api/company-profile/${userId}/logo`;
+
+    let profileData = {};
+
+    // ── Toast ──
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    // ── Fetch profile ──
+    async function fetchProfile() {
+        try {
+            const res  = await fetch(API_BASE);
+            const data = await res.json();
+            profileData = data;
+            renderProfile(data);
+        } catch (err) {
+            showToast('Could not load profile.', 'error');
+        }
+    }
+
+    // ── Render all fields ──
+    function renderProfile(d) {
+        // Hero
+        document.getElementById('hero-name').textContent     = d.companyName    || 'Your Company Name';
+        document.getElementById('hero-industry').textContent = d.industry        || 'Industry not set';
+        document.getElementById('hero-size').textContent     = '👥 ' + (d.companySize   || 'Size not set');
+        document.getElementById('hero-city').textContent     = '📍 ' + (d.city ? `${d.city}, ${d.country || ''}`.trim().replace(/,$/, '') : 'Location not set');
+        document.getElementById('hero-founded').textContent  = '📅 Founded: ' + (d.foundedYear || '—');
+
+        if (d.website) {
+            document.getElementById('hero-website-span').style.display = '';
+            document.getElementById('hero-website').href        = d.website;
+            document.getElementById('hero-website').textContent = d.website.replace(/^https?:\/\//, '');
+        }
+
+        if (d.logoUrl) {
+            const img = document.getElementById('logo-img');
+            img.src = 'http://localhost:5000' + d.logoUrl;
+            img.style.display = 'block';
+            document.getElementById('logo-placeholder').style.display = 'none';
+        }
+
+        // Basic
+        setVal('v-companyName',  d.companyName);
+        setVal('v-industry',     d.industry);
+        setVal('v-companySize',  d.companySize);
+        setVal('v-foundedYear',  d.foundedYear);
+        setVal('v-website',      d.website, true);
+        setVal('v-description',  d.description);
+
+        // Contact
+        setVal('v-contactEmail', d.contactEmail);
+        setVal('v-contactPhone', d.contactPhone);
+        setVal('v-address',      d.address);
+        setVal('v-city',         d.city);
+        setVal('v-state',        d.state);
+        setVal('v-country',      d.country);
+        setVal('v-pincode',      d.pincode);
+
+        // Social
+        let hasSocial = false;
+        if (d.linkedin) {
+            const el = document.getElementById('v-linkedin');
+            el.href = d.linkedin; el.style.display = 'inline-flex';
+            hasSocial = true;
+        }
+        if (d.twitter) {
+            const el = document.getElementById('v-twitter');
+            el.href = d.twitter; el.style.display = 'inline-flex';
+            hasSocial = true;
+        }
+        document.getElementById('v-no-social').style.display = hasSocial ? 'none' : '';
+
+        updateCompletion(d);
+    }
+
+    function setVal(id, val, isLink = false) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (!val) {
+            el.textContent = 'Not provided';
+            el.classList.add('empty');
+        } else {
+            if (isLink) {
+                el.innerHTML = `<a href="${val}" target="_blank">${val}</a>`;
+            } else {
+                el.textContent = val;
+            }
+            el.classList.remove('empty');
+        }
+    }
+
+    // ── Profile completion ──
+    function updateCompletion(d) {
+        const fields = ['companyName','industry','companySize','foundedYear','website','description',
+                        'contactEmail','contactPhone','address','city','country','linkedin'];
+        const filled = fields.filter(f => d[f] && d[f] !== '').length;
+        const pct    = Math.round((filled / fields.length) * 100);
+        document.getElementById('comp-bar').style.width = pct + '%';
+        document.getElementById('comp-pct').textContent = pct + '%';
+    }
+
+    // ── Edit toggle ──
+    const sectionFields = {
+        basic:   ['companyName','industry','companySize','foundedYear','website','description'],
+        contact: ['contactEmail','contactPhone','address','city','state','country','pincode'],
+        social:  ['linkedin','twitter']
+    };
+
+    function toggleEdit(section) {
+        document.getElementById(section + '-view').style.display        = 'none';
+        document.getElementById(section + '-edit').style.display        = '';
+        document.getElementById(section + '-actions').style.display     = 'none';
+        document.getElementById(section + '-save-actions').style.display = '';
+
+        // Fill edit inputs from profileData
+        sectionFields[section].forEach(field => {
+            const el = document.getElementById('e-' + field);
+            if (el) el.value = profileData[field] || '';
+        });
+    }
+
+    function cancelEdit(section) {
+        document.getElementById(section + '-view').style.display         = '';
+        document.getElementById(section + '-edit').style.display         = 'none';
+        document.getElementById(section + '-actions').style.display      = '';
+        document.getElementById(section + '-save-actions').style.display = 'none';
+    }
+
+    async function saveSection(section) {
+        const btn = document.querySelector(`#${section}-save-actions .btn-save`);
+        btn.innerHTML = '<span class="spinner"></span> Saving…';
+        btn.disabled  = true;
+
+        // Collect only this section's fields
+        const payload = {};
+        sectionFields[section].forEach(field => {
+            const el = document.getElementById('e-' + field);
+            if (el) payload[field] = el.value.trim();
+        });
+
+        // Merge with full profile for PUT
+        const fullPayload = { ...profileData, ...payload };
+
+        try {
+            const res    = await fetch(API_BASE, {
+                method:  'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(fullPayload)
+            });
+            const result = await res.json();
+
+            if (res.ok) {
+                profileData = result.data;
+                renderProfile(profileData);
+                cancelEdit(section);
+                showToast('Profile updated successfully ✓', 'success');
+            } else {
+                showToast(result.message || 'Update failed', 'error');
+            }
+        } catch (err) {
+            showToast('Server error. Try again.', 'error');
+        } finally {
+            btn.innerHTML = '💾 Save';
+            btn.disabled  = false;
+        }
+    }
+
+    // ── Logo upload ──
+    async function uploadLogo(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('logo', file);
+
+        try {
+            const res    = await fetch(LOGO_API, { method: 'POST', body: formData });
+            const result = await res.json();
+            if (res.ok) {
+                const img = document.getElementById('logo-img');
+                img.src   = 'http://localhost:5000' + result.logoUrl + '?t=' + Date.now();
+                img.style.display = 'block';
+                document.getElementById('logo-placeholder').style.display = 'none';
+                showToast('Logo updated ✓', 'success');
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (err) {
+            showToast('Logo upload failed.', 'error');
+        }
+    }
+
+    // Init
+    fetchProfile();
+</script>
+</body>
+</html>

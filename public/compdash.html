@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Students – Company Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #f0f2f5;
+            --sidebar: #1a2332;
+            --sidebar-hover: #243347;
+            --accent: #3b82f6;
+            --accent-dark: #2563eb;
+            --green: #22c55e;
+            --green-dark: #16a34a;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --purple: #8b5cf6;
+            --white: #ffffff;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --light: #f8fafc;
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { background: var(--sidebar); width: 240px; position: fixed; top: 0; left: 0; height: 100%; padding: 28px 16px; display: flex; flex-direction: column; gap: 4px; }
+        .sidebar h2 { color: #fff; font-size: 17px; font-weight: 600; text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #2d3f55; }
+        .sidebar a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; padding: 10px 14px; border-radius: 8px; display: block; transition: all .2s; }
+        .sidebar a:hover { background: var(--sidebar-hover); color: #fff; }
+        .sidebar a.active { background: var(--sidebar-hover); color: var(--accent); }
+        .sidebar a#logout { color: #f87171; margin-top: 8px; }
+        .sidebar a#logout:hover { background: #2d1f1f; color: #fca5a5; }
+        .sidebar footer { color: #475569; font-size: 11px; text-align: center; margin-top: auto; padding-top: 20px; }
+
+        /* Main */
+        .main-content { margin-left: 240px; padding: 36px 40px; width: calc(100% - 240px); }
+
+        /* Page header */
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { font-size: 22px; font-weight: 600; }
+        .page-header p { font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+
+        /* Stats row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+        .stat-card .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; }
+        .stat-card.blue  .value { color: var(--accent); }
+        .stat-card.green .value { color: var(--green); }
+        .stat-card.amber .value { color: var(--amber); }
+        .stat-card.purple .value { color: var(--purple); }
+
+        /* Filters */
+        .filters { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .filters select, .filters input {
+            font-family: inherit; font-size: 13.5px; padding: 8px 12px;
+            border: 1.5px solid var(--border); border-radius: 8px;
+            background: var(--white); color: var(--text); outline: none;
+            transition: border-color .2s;
+        }
+        .filters select:focus, .filters input:focus { border-color: var(--accent); }
+        .filters label { font-size: 13px; font-weight: 600; color: var(--muted); }
+
+        /* Table card */
+        .table-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+        .table-toolbar { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .table-toolbar h2 { font-size: 15px; font-weight: 600; }
+        .badge { background: #eff6ff; color: var(--accent); font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        thead tr { background: var(--light); }
+        th { text-align: left; padding: 11px 16px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #f8fafc; }
+        td { padding: 12px 16px; vertical-align: middle; }
+        td.muted { color: var(--muted); font-size: 13px; }
+        .no-data { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+
+        /* Job badge */
+        .job-badge { display: inline-block; background: #f0f9ff; color: #0369a1; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 6px; }
+
+        /* Status badge */
+        .status { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+        .status.Pending     { background: #fef9c3; color: #854d0e; }
+        .status.Reviewed    { background: #eff6ff; color: #1d4ed8; }
+        .status.Shortlisted { background: #dcfce7; color: #166534; }
+        .status.Rejected    { background: #fef2f2; color: #991b1b; }
+
+        /* Resume link */
+        .resume-link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: none; padding: 5px 10px; background: #eff6ff; border-radius: 6px; transition: background .15s; }
+        .resume-link:hover { background: #dbeafe; }
+        .no-resume { font-size: 12px; color: var(--muted); font-style: italic; }
+
+        /* Action buttons */
+        .actions { display: flex; gap: 6px; }
+        .btn-icon { border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; }
+        .btn-view   { background: #eff6ff; color: var(--accent); }
+        .btn-view:hover { background: #dbeafe; }
+        .btn-delete { background: #fef2f2; color: var(--red); }
+        .btn-delete:hover { background: #fee2e2; }
+
+        /* Status select inside table */
+        .status-select { font-family: inherit; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--light); cursor: pointer; outline: none; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 28px; right: 28px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid var(--green); }
+        .toast.error   { border-left: 4px solid var(--red); }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); backdrop-filter: blur(3px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--white); border-radius: 14px; width: 520px; max-width: calc(100vw - 40px); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: slideUp .25s ease; }
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-header h3 { font-size: 17px; font-weight: 600; }
+        .modal-close { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+        .modal-close:hover { background: var(--border); }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer { padding: 14px 24px 20px; display: flex; justify-content: flex-end; }
+        .btn-close-modal { background: var(--light); color: var(--muted); border: 1.5px solid var(--border); padding: 9px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+        /* Detail view */
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .detail-item { display: flex; flex-direction: column; gap: 4px; }
+        .detail-item label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+        .detail-item p { font-size: 14px; font-weight: 500; color: var(--text); }
+        .detail-item.full { grid-column: 1 / -1; }
+        .modal-box::-webkit-scrollbar { width: 5px; }
+        .modal-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Company Dashboard</h2>
+    <a href="company-dashboard.html">🏠 Dashboard</a>
+    <a href="compdash.html" class="active">👥 Manage Students</a>
+    <a href="companyprofile.html">👤 Profile</a>
+    <a href="company-login.html" id="logout">🚪 Logout</a>
+    <footer>
+        
+    </footer>
+</div>
+
+<div class="main-content">
+    <div class="page-header">
+        <h1>Manage Students</h1>
+        <p>View all students who applied to your job announcements</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card blue">
+            <div class="label">Total Applications</div>
+            <div class="value" id="stat-total">—</div>
+        </div>
+        <div class="stat-card amber">
+            <div class="label">Pending Review</div>
+            <div class="value" id="stat-pending">—</div>
+        </div>
+        <div class="stat-card green">
+            <div class="label">Shortlisted</div>
+            <div class="value" id="stat-shortlisted">—</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="label">Rejected</div>
+            <div class="value" id="stat-rejected">—</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <label>Filter by Job:</label>
+        <select id="filter-job" onchange="applyFilters()">
+            <option value="all">All Jobs</option>
+        </select>
+        <label>Status:</label>
+        <select id="filter-status" onchange="applyFilters()">
+            <option value="all">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Reviewed">Reviewed</option>
+            <option value="Shortlisted">Shortlisted</option>
+            <option value="Rejected">Rejected</option>
+        </select>
+        <input type="text" id="filter-search" placeholder="Search student name or email…" oninput="applyFilters()" style="width:240px">
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+        <div class="table-toolbar">
+            <h2>Job Applications</h2>
+            <span class="badge" id="count-badge">0 total</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Job Title</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Applied On</th>
+                    <th>Resume</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="app-table-body">
+                <tr><td colspan="9" class="no-data"><p>Loading applications…</p></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="view-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Application Details</h3>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-grid" id="view-body"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-close-modal" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const API_APPS = 'http://localhost:5000/api/applications';
+    let allApplications = [];
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    function fmt(d) {
+        if (!d) return '—';
+        return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    async function fetchApplications() {
+        try {
+            const res  = await fetch(API_APPS);
+            const data = await res.json();
+            allApplications = data;
+            updateStats(data);
+            populateJobFilter(data);
+            renderTable(data);
+        } catch (err) {
+            document.getElementById('app-table-body').innerHTML =
+                `<tr><td colspan="9" class="no-data"><p>⚠️ Could not connect to server.</p></td></tr>`;
+        }
+    }
+
+    function updateStats(data) {
+        document.getElementById('stat-total').textContent       = data.length;
+        document.getElementById('stat-pending').textContent     = data.filter(a => a.status === 'Pending').length;
+        document.getElementById('stat-shortlisted').textContent = data.filter(a => a.status === 'Shortlisted').length;
+        document.getElementById('stat-rejected').textContent    = data.filter(a => a.status === 'Rejected').length;
+    }
+
+    function populateJobFilter(data) {
+        const jobs = [...new Map(data.map(a => [a.announcementId, a.jobTitle])).entries()];
+        const sel  = document.getElementById('filter-job');
+        sel.innerHTML = '<option value="all">All Jobs</option>' +
+            jobs.map(([id, title]) => `<option value="${id}">${title} (${id})</option>`).join('');
+    }
+
+    function applyFilters() {
+        const job    = document.getElementById('filter-job').value;
+        const status = document.getElementById('filter-status').value;
+        const search = document.getElementById('filter-search').value.toLowerCase();
+
+        const filtered = allApplications.filter(a => {
+            const matchJob    = job    === 'all' || a.announcementId === job;
+            const matchStatus = status === 'all' || a.status === status;
+            const matchSearch = !search ||
+                a.studentName.toLowerCase().includes(search) ||
+                a.studentEmail.toLowerCase().includes(search);
+            return matchJob && matchStatus && matchSearch;
+        });
+
+        renderTable(filtered);
+    }
+
+    function renderTable(data) {
+        document.getElementById('count-badge').textContent = data.length + ' total';
+        const tbody = document.getElementById('app-table-body');
+
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="9" class="no-data"><p>No applications found.</p></td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(a => `
+            <tr>
+                <td><code style="font-family:'DM Mono',monospace;font-size:11.5px;color:#6366f1">${a.announcementId}</code></td>
+                <td><span class="job-badge">${a.jobTitle}</span></td>
+                <td style="font-weight:600">${a.studentName}</td>
+                <td class="muted" style="font-size:13px">${a.studentEmail}</td>
+                <td class="muted">${a.department || '—'}</td>
+                <td class="muted">${fmt(a.createdAt)}</td>
+                <td>
+                    ${a.resumeUrl
+                        ? `<a class="resume-link" href="http://localhost:5000${a.resumeUrl}" target="_blank">
+                               📄 ${a.resumeOriginalName || 'Resume'}
+                           </a>`
+                        : `<span class="no-resume">No resume</span>`
+                    }
+                </td>
+                <td>
+                    <select class="status-select" onchange="updateStatus('${a._id}', this.value)">
+                        ${['Pending','Reviewed','Shortlisted','Rejected'].map(s =>
+                            `<option value="${s}" ${a.status === s ? 'selected' : ''}>${s}</option>`
+                        ).join('')}
+                    </select>
+                </td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-icon btn-view"   onclick="viewApp('${a._id}')">👁 View</button>
+                        <button class="btn-icon btn-delete" onclick="deleteApp('${a._id}')">🗑</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function updateStatus(id, status) {
+        try {
+            const res = await fetch(`${API_APPS}/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                showToast(`Status updated to ${status}`, 'success');
+                // update local data
+                const idx = allApplications.findIndex(a => a._id === id);
+                if (idx !== -1) allApplications[idx].status = status;
+                updateStats(allApplications);
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (err) {
+            showToast('Failed to update status.', 'error');
+        }
+    }
+
+    function viewApp(id) {
+        const a = allApplications.find(x => x._id === id);
+        if (!a) return;
+        document.getElementById('view-body').innerHTML = `
+            <div class="detail-item"><label>Job ID</label><p style="font-family:'DM Mono',monospace;color:#6366f1;font-size:13px">${a.announcementId}</p></div>
+            <div class="detail-item"><label>Job Title</label><p>${a.jobTitle}</p></div>
+            <div class="detail-item"><label>Company</label><p>${a.company}</p></div>
+            <div class="detail-item"><label>Applied On</label><p>${fmt(a.createdAt)}</p></div>
+            <div class="detail-item"><label>Student Name</label><p>${a.studentName}</p></div>
+            <div class="detail-item"><label>Email</label><p>${a.studentEmail}</p></div>
+            <div class="detail-item"><label>Phone</label><p>${a.studentPhone || '—'}</p></div>
+            <div class="detail-item"><label>Department</label><p>${a.department || '—'}</p></div>
+            <div class="detail-item"><label>Status</label><p><span class="status ${a.status}">${a.status}</span></p></div>
+            <div class="detail-item"><label>Resume</label><p>
+                ${a.resumeUrl
+                    ? `<a class="resume-link" href="http://localhost:5000${a.resumeUrl}" target="_blank">📄 ${a.resumeOriginalName || 'Download Resume'}</a>`
+                    : 'No resume uploaded'}
+            </p></div>
+        `;
+        document.getElementById('view-modal').classList.add('open');
+    }
+
+    async function deleteApp(id) {
+        if (!confirm('Remove this application? This cannot be undone.')) return;
+        try {
+            const res    = await fetch(`${API_APPS}/${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (res.ok) {
+                showToast(result.message, 'success');
+                allApplications = allApplications.filter(a => a._id !== id);
+                updateStats(allApplications);
+                applyFilters();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (err) {
+            showToast('Delete failed.', 'error');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('view-modal').classList.remove('open');
+    }
+
+    document.getElementById('view-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('view-modal')) closeModal();
+    });
+
+    fetchApplications();
+</script>
+</body>
+</html>

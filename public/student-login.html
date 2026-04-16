@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login/Register</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .form-container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.2); width: 370px; }
+        h2 { text-align: center; margin-bottom: 20px; }
+        form { display: flex; flex-direction: column; }
+        input, select { margin-bottom: 12px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+        button[type="submit"] { padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; }
+        button[type="submit"]:hover { background-color: #0056b3; }
+        button[type="submit"]:disabled { opacity: .6; cursor: not-allowed; }
+        .toggle-btn { background: none; border: none; color: #007bff; text-decoration: underline; cursor: pointer; padding: 0; font-size: 14px; }
+        .error-msg   { color: red;   text-align: center; font-size: 13px; margin-top: 8px; min-height: 18px; }
+        .success-msg { color: green; text-align: center; font-size: 13px; margin-top: 8px; min-height: 18px; }
+        .gender-container { display: flex; gap: 20px; margin-bottom: 12px; }
+        .gender-container label { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+        .back-link { text-align: center; margin-top: 16px; }
+        .back-link a { color: #007bff; text-decoration: underline; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN FORM -->
+    <div class="form-container" id="loginBox">
+        <h2>Student Login</h2>
+        <form id="loginForm">
+            <input type="email"    id="loginEmail"    placeholder="Email"    required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit" id="login-btn">Login</button>
+        </form>
+        <div class="error-msg"   id="login-error"></div>
+        <div class="success-msg" id="login-success"></div>
+        <p style="text-align:center;margin-top:12px;font-size:14px">
+            Don't have an account? <button class="toggle-btn" onclick="toggleForms()">Register here</button>
+        </p>
+        <div class="back-link"><a href="index.html">Back to Index</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div class="form-container" id="registerBox" style="display:none">
+        <h2>Student Register</h2>
+        <form id="registerForm">
+            <input type="text"  id="reg-name"     placeholder="Full Name"     required>
+            <input type="email" id="reg-email"    placeholder="Email"         required>
+            <input type="tel"   id="reg-phone"    placeholder="Phone Number"  required>
+            <input type="date"  id="reg-dob"      placeholder="Date of Birth" required>
+            <input type="text"  id="reg-college"  placeholder="College Name"  required>
+            <select id="reg-dept" required>
+                <option value="">Select Department</option>
+                <option value="COMPS">COMPS</option>
+                <option value="MECH">MECH</option>
+                <option value="EXTC">EXTC</option>
+                <option value="IT">IT</option>
+                <option value="CIVIL">CIVIL</option>
+                <option value="ELX">ELX</option>
+                <option value="AI&DS">AI&DS</option>
+            </select>
+            <select id="reg-sem" required>
+                <option value="">Select Semester</option>
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+                <option value="3">Semester 3</option>
+                <option value="4">Semester 4</option>
+                <option value="5">Semester 5</option>
+                <option value="6">Semester 6</option>
+                <option value="7">Semester 7</option>
+                <option value="8">Semester 8</option>
+            </select>
+            <div class="gender-container">
+                <label><input type="radio" name="gender" value="Male"   required> Male</label>
+                <label><input type="radio" name="gender" value="Female" required> Female</label>
+                <label><input type="radio" name="gender" value="Other"  required> Other</label>
+            </div>
+            <input type="password" id="reg-password" placeholder="Password" required>
+            <button type="submit" id="register-btn">Register</button>
+        </form>
+        <div class="error-msg"   id="reg-error"></div>
+        <div class="success-msg" id="reg-success"></div>
+        <p style="text-align:center;margin-top:12px;font-size:14px">
+            Already have an account? <button class="toggle-btn" onclick="toggleForms()">Login here</button>
+        </p>
+        <div class="back-link"><a href="index.html">Back to Index</a></div>
+    </div>
+
+    <script>
+        function toggleForms() {
+            const lb = document.getElementById('loginBox');
+            const rb = document.getElementById('registerBox');
+            lb.style.display = lb.style.display === 'none' ? 'block' : 'none';
+            rb.style.display = rb.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ── LOGIN ──
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl   = document.getElementById('login-error');
+            const successEl = document.getElementById('login-success');
+            const btn       = document.getElementById('login-btn');
+            errorEl.textContent = ''; successEl.textContent = '';
+            btn.disabled = true; btn.textContent = 'Logging in…';
+
+            const email    = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            try {
+                const res  = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // ✅ Save token + all user fields to localStorage
+                    localStorage.setItem('token',      data.token);
+                    localStorage.setItem('userId',     data.user.id);
+                    localStorage.setItem('userName',   data.user.name);
+                    localStorage.setItem('userEmail',  data.user.email);
+                    localStorage.setItem('userRole',   data.user.role);
+                    localStorage.setItem('userPhone',  data.user.phone      || '');
+                    localStorage.setItem('userGender', data.user.gender     || '');
+                    localStorage.setItem('userDept',   data.user.department || '');
+                    localStorage.setItem('userCollege',data.user.college    || '');
+                    localStorage.setItem('userDob',    data.user.dob        || '');
+                    localStorage.setItem('userSem',    data.user.semester   || '');
+
+                    successEl.textContent = `Welcome, ${data.user.name}! Redirecting…`;
+                    setTimeout(() => {
+                        window.location.href = 'studentdashboard.html';
+                    }, 1000);
+                } else {
+                    errorEl.textContent = data.message || 'Invalid email or password.';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Cannot connect to server. Make sure backend is running.';
+            } finally {
+                btn.disabled = false; btn.textContent = 'Login';
+            }
+        });
+
+        // ── REGISTER ──
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl   = document.getElementById('reg-error');
+            const successEl = document.getElementById('reg-success');
+            const btn       = document.getElementById('register-btn');
+            errorEl.textContent = ''; successEl.textContent = '';
+            btn.disabled = true; btn.textContent = 'Registering…';
+
+            const name     = document.getElementById('reg-name').value.trim();
+            const email    = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const phone    = document.getElementById('reg-phone').value.trim();
+            const dob      = document.getElementById('reg-dob').value;
+            const college  = document.getElementById('reg-college').value.trim();
+            const dept     = document.getElementById('reg-dept').value;
+            const semester = document.getElementById('reg-sem').value;
+            const gender   = document.querySelector('input[name="gender"]:checked')?.value || '';
+
+            if (!gender) {
+                errorEl.textContent = 'Please select a gender.';
+                btn.disabled = false; btn.textContent = 'Register';
+                return;
+            }
+
+            try {
+                const res  = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name, email, password,
+                        role:       'student',
+                        phone,
+                        gender,
+                        department: dept,
+                        college,
+                        dob,
+                        semester
+                    })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    successEl.textContent = 'Registered successfully! Please login.';
+                    setTimeout(() => toggleForms(), 1500);
+                } else {
+                    errorEl.textContent = data.message || 'Registration failed.';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Cannot connect to server.';
+            } finally {
+                btn.disabled = false; btn.textContent = 'Register';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #f0f2f5;
+            --sidebar: #1a2332;
+            --sidebar-hover: #243347;
+            --accent: #3b82f6;
+            --accent-dark: #2563eb;
+            --green: #22c55e;
+            --green-dark: #16a34a;
+            --red: #ef4444;
+            --white: #ffffff;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --light: #f8fafc;
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { background: var(--sidebar); width: 240px; position: fixed; top: 0; left: 0; height: 100%; padding: 28px 16px; display: flex; flex-direction: column; gap: 4px; }
+        .sidebar h2 { color: #fff; font-size: 17px; font-weight: 600; text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #2d3f55; }
+        .sidebar a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; padding: 10px 14px; border-radius: 8px; display: block; transition: all .2s; }
+        .sidebar a:hover { background: var(--sidebar-hover); color: #fff; }
+        .sidebar a.active { background: var(--sidebar-hover); color: var(--accent); }
+        .sidebar a#logout { color: #f87171; margin-top: 8px; }
+        .sidebar a#logout:hover { background: #2d1f1f; color: #fca5a5; }
+        .sidebar footer { color: #475569; font-size: 11px; text-align: center; margin-top: auto; padding-top: 20px; }
+
+        /* Main */
+        .main-content { margin-left: 240px; padding: 36px 40px; width: calc(100% - 240px); }
+
+        /* Welcome banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            border-radius: 14px;
+            padding: 28px 32px;
+            color: #fff;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .welcome-banner h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+        .welcome-banner p { font-size: 13.5px; opacity: .8; }
+        .welcome-banner .date { font-size: 13px; opacity: .7; text-align: right; }
+
+        /* Section heading */
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .section-heading h2 { font-size: 17px; font-weight: 600; color: var(--text); }
+
+        /* Table card */
+        .table-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+        .table-toolbar { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .table-toolbar h2 { font-size: 15px; font-weight: 600; }
+        .badge { background: #eff6ff; color: var(--accent); font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        thead tr { background: var(--light); }
+        th { text-align: left; padding: 11px 16px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); border-bottom: 1px solid var(--border); }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #f8fafc; }
+        td { padding: 13px 16px; vertical-align: middle; }
+        td.muted { color: var(--muted); font-size: 13px; }
+        .company-badge { display: inline-block; background: #f0f9ff; color: #0369a1; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 6px; }
+        .no-data { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+
+        /* Buttons */
+        .actions { display: flex; gap: 6px; }
+        .btn-icon { border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; display: flex; align-items: center; gap: 4px; }
+        .btn-view   { background: #eff6ff; color: var(--accent); }
+        .btn-view:hover   { background: #dbeafe; }
+        .btn-update { background: #fefce8; color: #854d0e; }
+        .btn-update:hover { background: #fef9c3; }
+        .btn-delete { background: #fef2f2; color: var(--red); }
+        .btn-delete:hover { background: #fee2e2; }
+        .btn-create { background: var(--green); color: #fff; border: none; padding: 10px 20px; font-size: 13.5px; font-weight: 600; border-radius: 9px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 7px; transition: background .2s, transform .15s; box-shadow: 0 2px 8px rgba(34,197,94,.3); }
+        .btn-create:hover { background: var(--green-dark); transform: translateY(-1px); }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 28px; right: 28px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid var(--green); }
+        .toast.error   { border-left: 4px solid var(--red); }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); backdrop-filter: blur(3px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--white); border-radius: 14px; width: 540px; max-width: calc(100vw - 40px); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: slideUp .25s ease; }
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-header h3 { font-size: 17px; font-weight: 600; }
+        .modal-close { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; padding: 2px 6px; border-radius: 6px; transition: background .15s; }
+        .modal-close:hover { background: var(--border); color: var(--text); }
+        .modal-body { padding: 20px 24px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+        .form-group.full { grid-column: 1 / -1; }
+        label { font-size: 12.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+        input, textarea { font-family: inherit; font-size: 14px; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; color: var(--text); background: var(--light); transition: border-color .2s, box-shadow .2s; outline: none; }
+        input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.12); background: #fff; }
+        input[readonly] { background: #f1f5f9; color: var(--muted); cursor: not-allowed; }
+        textarea { resize: vertical; min-height: 90px; }
+        .modal-footer { padding: 14px 24px 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-cancel { background: var(--light); color: var(--muted); border: 1.5px solid var(--border); padding: 9px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; }
+        .btn-cancel:hover { background: var(--border); color: var(--text); }
+        .btn-submit { background: var(--accent); color: #fff; border: none; padding: 9px 22px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s, transform .15s; }
+        .btn-submit:hover { background: var(--accent-dark); transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+        /* View modal */
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .detail-item label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+        .detail-item p { font-size: 14px; color: var(--text); font-weight: 500; }
+        .detail-item.full { grid-column: 1 / -1; }
+        .detail-item p.desc { font-size: 13.5px; line-height: 1.6; font-weight: 400; background: var(--light); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); }
+        .modal-box::-webkit-scrollbar { width: 5px; }
+        .modal-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Company Dashboard</h2>
+    <a href="company-dashboard.html" class="active">🏠 Dashboard</a>
+    <a href="compdash.html">👥 Manage Students</a>
+    <a href="companyprofile.html">👤 Profile</a>
+    <a href="company-login.html" id="logout">🚪 Logout</a>
+    <footer></footer>
+</div>
+
+<div class="main-content">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <div>
+            <h1>Welcome back 👋</h1>
+            <p>Here are the latest job announcements for students.</p>
+        </div>
+        <div class="date" id="today-date"></div>
+    </div>
+
+    <!-- Announcements Section -->
+    <div class="section-heading">
+        <h2>📢 Job Announcements</h2>
+        <button class="btn-create" onclick="openCreateModal()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+            Create Announcement
+        </button>
+    </div>
+
+    <div class="table-card">
+        <div class="table-toolbar">
+            <h2>All Announcements</h2>
+            <span class="badge" id="count-badge">0 total</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Publish Date</th>
+                    <th>Last Date</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ann-table-body">
+                <tr><td colspan="7" class="no-data"><p>Loading announcements…</p></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- CREATE / EDIT MODAL -->
+<div class="modal-overlay" id="form-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modal-title">Create Announcement</h3>
+            <button class="modal-close" onclick="closeModal('form-modal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Announcement ID</label>
+                    <input type="text" id="f-id" readonly placeholder="Auto-generated">
+                </div>
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" id="f-job" placeholder="e.g. Frontend Developer">
+                </div>
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" id="f-company" placeholder="e.g. Google Inc.">
+                </div>
+                <div class="form-group">
+                    <label>Created By</label>
+                    <input type="text" id="f-createdby" placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label>Publish Date</label>
+                    <input type="date" id="f-publish">
+                </div>
+                <div class="form-group">
+                    <label>Last Date of Application</label>
+                    <input type="date" id="f-lastdate">
+                </div>
+                <div class="form-group full">
+                    <label>Job Description</label>
+                    <textarea id="f-desc" placeholder="Describe the role, requirements, skills needed…"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('form-modal')">Cancel</button>
+            <button class="btn-submit" id="form-submit-btn" onclick="submitForm()">Publish Announcement</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="view-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Announcement Details</h3>
+            <button class="modal-close" onclick="closeModal('view-modal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-grid" id="view-body"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('view-modal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/auth-helper.js"></script>
+<script>
+    const API_BASE = 'http://localhost:5000/api/announcements';
+    let editingId = null;
+
+    // Safe auth check — won't crash if auth-helper.js is missing
+    if (typeof Auth !== 'undefined') {
+        Auth.requireRole('company', 'company-login.html');
+    }
+
+    // Show today's date
+    document.getElementById('today-date').textContent =
+        new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    function fmt(d) {
+        if (!d) return '—';
+        return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function toInputDate(d) {
+        if (!d) return '';
+        return new Date(d).toISOString().split('T')[0];
+    }
+
+    async function fetchAnnouncements() {
+        try {
+            const res  = await fetch(API_BASE);
+            const data = await res.json();
+            renderTable(data);
+        } catch (err) {
+            document.getElementById('ann-table-body').innerHTML =
+                `<tr><td colspan="7" class="no-data"><p>⚠️ Could not connect to server. Make sure backend is running.</p></td></tr>`;
+        }
+    }
+
+    function renderTable(data) {
+        document.getElementById('count-badge').textContent = data.length + ' total';
+        const tbody = document.getElementById('ann-table-body');
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="no-data"><p>No announcements yet. Create one!</p></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.map(a => `
+            <tr>
+                <td><code style="font-family:'DM Mono',monospace;font-size:12px;color:#6366f1">${a.announcementId}</code></td>
+                <td style="font-weight:600">${a.job}</td>
+                <td><span class="company-badge">${a.company}</span></td>
+                <td class="muted">${fmt(a.publishDate)}</td>
+                <td class="muted">${fmt(a.lastDate)}</td>
+                <td class="muted">${a.createdBy}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-icon btn-view"   onclick="viewAnn('${a.announcementId}')">👁 View</button>
+                        <button class="btn-icon btn-update" onclick="editAnn('${a.announcementId}')">✏️ Edit</button>
+                        <button class="btn-icon btn-delete" onclick="deleteAnn('${a.announcementId}')">🗑 Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function openCreateModal() {
+        editingId = null;
+        document.getElementById('modal-title').textContent = 'Create Announcement';
+        document.getElementById('form-submit-btn').textContent = 'Publish Announcement';
+        clearForm();
+        document.getElementById('f-publish').value = new Date().toISOString().split('T')[0];
+        document.getElementById('form-modal').classList.add('open');
+    }
+
+    function clearForm() {
+        ['f-id','f-job','f-company','f-createdby','f-publish','f-lastdate','f-desc']
+            .forEach(id => document.getElementById(id).value = '');
+        document.getElementById('f-id').value = 'Auto-generated';
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    async function submitForm() {
+        const job         = document.getElementById('f-job').value.trim();
+        const company     = document.getElementById('f-company').value.trim();
+        const description = document.getElementById('f-desc').value.trim();
+        const publishDate = document.getElementById('f-publish').value;
+        const lastDate    = document.getElementById('f-lastdate').value;
+        const createdBy   = document.getElementById('f-createdby').value.trim();
+
+        if (!job || !company || !description || !publishDate || !lastDate || !createdBy) {
+            showToast('Please fill in all fields.', 'error'); return;
+        }
+
+        const btn = document.getElementById('form-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Saving…';
+
+        try {
+            let res;
+            if (editingId) {
+                res = await fetch(`${API_BASE}/${editingId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ job, company, description, publishDate, lastDate, createdBy })
+                });
+            } else {
+                res = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ job, company, description, publishDate, lastDate, createdBy })
+                });
+            }
+            const result = await res.json();
+            if (res.ok) {
+                showToast(result.message, 'success');
+                closeModal('form-modal');
+                fetchAnnouncements();
+            } else {
+                showToast(result.message || 'Something went wrong.', 'error');
+            }
+        } catch (err) {
+            showToast('Server error. Try again.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = editingId ? 'Save Changes' : 'Publish Announcement';
+        }
+    }
+
+    async function viewAnn(id) {
+        try {
+            const res = await fetch(`${API_BASE}/${id}`);
+            const a   = await res.json();
+            document.getElementById('view-body').innerHTML = `
+                <div class="detail-item"><label>ID</label><p style="font-family:'DM Mono',monospace;color:#6366f1;font-size:13px">${a.announcementId}</p></div>
+                <div class="detail-item"><label>Job Title</label><p>${a.job}</p></div>
+                <div class="detail-item"><label>Company</label><p>${a.company}</p></div>
+                <div class="detail-item"><label>Created By</label><p>${a.createdBy}</p></div>
+                <div class="detail-item"><label>Publish Date</label><p>${fmt(a.publishDate)}</p></div>
+                <div class="detail-item"><label>Last Date of Application</label><p>${fmt(a.lastDate)}</p></div>
+                <div class="detail-item full"><label>Job Description</label><p class="desc">${a.description.replace(/\n/g,'<br>')}</p></div>
+            `;
+            document.getElementById('view-modal').classList.add('open');
+        } catch (err) { showToast('Could not load announcement.', 'error'); }
+    }
+
+    async function editAnn(id) {
+        try {
+            const res = await fetch(`${API_BASE}/${id}`);
+            const a   = await res.json();
+            editingId = id;
+            document.getElementById('modal-title').textContent = 'Edit Announcement';
+            document.getElementById('form-submit-btn').textContent = 'Save Changes';
+            document.getElementById('f-id').value        = a.announcementId;
+            document.getElementById('f-job').value       = a.job;
+            document.getElementById('f-company').value   = a.company;
+            document.getElementById('f-createdby').value = a.createdBy;
+            document.getElementById('f-publish').value   = toInputDate(a.publishDate);
+            document.getElementById('f-lastdate').value  = toInputDate(a.lastDate);
+            document.getElementById('f-desc').value      = a.description;
+            document.getElementById('form-modal').classList.add('open');
+        } catch (err) { showToast('Could not load announcement.', 'error'); }
+    }
+
+    async function deleteAnn(id) {
+        if (!confirm('Delete this announcement? This cannot be undone.')) return;
+        try {
+            const res    = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (res.ok) { showToast(result.message, 'success'); fetchAnnouncements(); }
+            else showToast(result.message, 'error');
+        } catch (err) { showToast('Delete failed. Try again.', 'error'); }
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+        el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+    });
+
+    fetchAnnouncements();
+</script>
+</body>
+</html>
