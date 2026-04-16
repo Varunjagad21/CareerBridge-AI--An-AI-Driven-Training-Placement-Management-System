@@ -1,7 +1,7 @@
 # CareerBridge AI 🎓
 ### An AI-Driven Training & Placement Management System
 
-![CareerBridge AI](screenshots/Screenshot 2026-04-16 111043.png)
+![CareerBridge AI](screenshots/main-dashboard.png)
 
 ## 📌 Overview
 CareerBridge AI is a full-stack AI-based placement system with features like student login, recruiter dashboard, resume analysis, job matching, and real-time communication. It uses Groq API for AI functionalities and MongoDB for managing user data, job postings, and applications efficiently.
@@ -11,13 +11,13 @@ CareerBridge AI is a full-stack AI-based placement system with features like stu
 ## 🖥️ Screenshots
 
 ### Student Dashboard
-![Student Dashboard](screenshots/Screenshot 2026-04-10 104303.png)
+![Student Dashboard](screenshots/student-dashboard.png)
 
 ### Admin Dashboard
-![Admin Dashboard](screenshots/Screenshot 2026-04-10 130127.png)
+![Admin Dashboard](screenshots/admin-dashboard.png)
 
 ### Company Dashboard
-![Company Dashboard](screenshots/Screenshot 2026-04-10 183947.png)
+![Company Dashboard](screenshots/company-dashboard.png)
 
 
 
