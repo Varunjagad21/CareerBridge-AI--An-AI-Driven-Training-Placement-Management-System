@@ -1,24 +1,18 @@
-node server.js
 
-cd Aptitude
-streamlit run AptiApp.py
-
-cd Aptitude
-streamlit run InteractiveDashboard.py
-
-cd CodingPract
-streamlit run DSA_app_db.py
-
-cd CodingPract
-streamlit run  DSA_dash.py
-
-cd MockInter
-streamlit run app.py
-
-cd ResumeATS
-streamlit run app.py
 
 start index.html
 
-user: varunjagad2101_db_user
-pass: WoaHXutjTM7qhq41
+How to run it:
+1. Run frontend
+	python -m http.server 5500
+2. Run backend
+	npx nodemon server.js
+3. Run Aptitude
+	streamlit run AptiApp.py
+4. Run CodingPract
+	streamlit run DSA_app_db.py
+5. Run MockInter
+	streamlit run app.py
+6. cd ResumeATS
+    streamlit run app.py
+
